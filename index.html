@@ -277,6 +277,7 @@
             document.getElementById("ros-status").innerText = "Connected.";
             document.getElementById("ros-stoplight").classList.remove("red");
             document.getElementById("ros-stoplight").classList.add("green");
+            document.getElementById("msg-insecure-rosbridge").classList.add("hidden");
         });
 
         ros.on('error', (error) => {
@@ -313,6 +314,16 @@
         }
 
         setInterval(publishGamepadState, 100 /* 10 Hz */);
+
+        // Check if the user is having trouble connecting
+        setTimeout(() => {
+            if (ros_is_connected) return;
+            if (rosbridge_url === null) return;
+
+            if (window.location.protocol === "https:" && !rosbridge_url.startswith("wss:")) {
+                document.getElementById("msg-insecure-rosbridge").classList.remove("hidden");
+            }
+        }, 5000);
     </script>
 </body>
 </html>
