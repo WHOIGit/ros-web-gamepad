@@ -20,13 +20,13 @@ Navigate to https://whoigit.github.io/ros-web-gamepad/?rosbridge-websocket-url=w
 
 Your browser's security settings may prevent the page from connecting to the rosbridge. In this case, download the HTML file and open it locally.
 
-The application publishes [`sensor_msgs/Joy`][sensor_msgs/Joy] to the `/joy` topic at 10 Hz.
+The application publishes [`sensor_msgs/Joy`][sensor_msgs/Joy] messages to the `/joy` topic at 10 Hz.
 
 Most browsers support the Gamepad API, but Safari's support seems buggy. At the time of writing, Chrome works well.
 
 This has been tested against ROS Melodic. It probably does not work with ROS2.
 
-The appearance of the gamepad indicators is derived from [`ipywidgets`][].
+The appearance of the gamepad indicators is derived from [`ipywidgets`][ipywidgets].
 
 [sensor_msgs/Joy]: https://github.com/ros/common_msgs/blob/noetic-devel/sensor_msgs/msg/Joy.msg
 [ipywidgets]: https://github.com/jupyter-widgets/ipywidgets
