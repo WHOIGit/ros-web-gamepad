@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <script type="text/javascript" src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+    <script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+    <style type="text/css">
+        .gamepad-box {
+            display: flex;
+        }
+
+        .gamepad-button {
+            width: fit-content;
+            box-sizing: border-box;
+        }
+
+        .gamepad-button .support {
+            position: relative;
+            margin: 1px;
+            width: 16px;
+            height: 16px;
+            border: 1px solid black;
+            background: lightgray;
+        }
+
+        .gamepad-button .support .bar {
+            position: absolute;
+            width: 100%;
+            bottom: 0px;
+            background: gray;
+        }
+
+        .gamepad-button .label {
+            text-align: center;
+        }
+
+        .gamepad-axis {
+            width: 16px;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        .gamepad-axis .support {
+            position: relative;
+            margin: 1px;
+            width: 4px;
+            height: 64px;
+            border: 1px solid black;
+            background: lightgray;
+        }
+
+        .gamepad-axis .bullet {
+            position: absolute;
+            margin: -3px;
+            box-sizing: unset;
+            width: 10px;
+            height: 10px;
+            background: gray;
+        }
+
+        .gamepad-axis .label {
+            text-align: center;
+        }
+
+        .stoplight {
+            display: inline-block;
+            position: relative;
+            top: .2em;
+            left: -.2em;
+            width: 1em;
+            height: 1em;
+            border-radius: 50%;
+            display: inline-block;
+            border: 1px solid black;
+        }
+
+        .stoplight.green {
+            background-color: green;
+        }
+
+        .stoplight.red {
+            background-color: red;
+        }
+
+        .alert {
+            border-radius: 8px;
+            padding: 4px;
+            margin: 8px;
+        }
+
+        .alert.info {
+            border: 1px solid blue;
+            background-color: lightblue;
+        }
+
+        .alert.warning {
+            border: 1px solid red;
+            background-color: lightpink;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .container {
+            width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+ 
+        <h1>ROS Web Gamepad</h1>
+
+        <div id="msg-rosbridge-addr" class="alert info hidden">
+            <p>Please append the address of your <a href="http://wiki.ros.org/rosbridge_suite">rosbridge server</a> to the URL. For example:</p>
+
+            <p><tt><a id="rosbridge-addr-example"></a></tt></p>
+        </div>
+
+        <div id="msg-insecure-rosbridge" class="alert warning hidden">
+            Your web browser may not allow us to connect to the rosbridge server due to security restrictions.
+            You can try downloading this page and running it locally.
+        </div>
+
+        <div id="msg-multi-gamepad" class="alert warning hidden">
+            You have connected multiple gamepads, but only one is supported at a time.
+        </div>
+
+        <div><div id="ros-stoplight" class="stoplight red"></div><b>ROS:</b> <span id="ros-status">Disconnected.</span></div>
+        <div><div id="gamepad-stoplight" class="stoplight red"></div><b>Gamepad:</b> <span id="gamepad-status">Disconnected. Connect gamepad and press any button.</span></div>
+    
+        <div id="axes" class="gamepad-box"></div>
+        <div id="buttons" class="gamepad-box"></div>
+
+    </div>
+
+    <script type="text/javascript">
+        // --- Gamepad part --- //
+
+        let gamepad_idx = -1;
+        let button_views = [];
+        let axis_views = [];
+
+        function update() {
+            if (gamepad_idx === -1) return;
+            const gamepad = navigator.getGamepads()[gamepad_idx];
+
+            for (let i = 0; i < gamepad.axes.length; i ++) {
+                axis_views[i].firstChild.firstChild.firstChild.style.top =
+                    Math.round(gamepad.axes[i] * 50 + 50) + "%";
+            }
+
+            for (let i = 0; i < gamepad.buttons.length; i ++) {
+                button_views[i].firstChild.firstChild.style.height =
+                    Math.round(gamepad.buttons[i].value * 100) + "%";
+            }
+
+            window.requestAnimationFrame(update);
+        }
+
+        function createAxisView(id) {
+            let axis = document.createElement("div");
+            axis.className = "gamepad-axis";
+
+            let support = document.createElement("div");
+            support.className = "support";
+            axis.appendChild(support);
+
+            let bar = document.createElement("div");
+            bar.className = "bar";
+            support.appendChild(bar);
+
+            let bullet = document.createElement("div");
+            bullet.className = "bullet";
+            bar.appendChild(bullet);
+
+            let label = document.createElement("div");
+            label.innerText = id;
+            axis.appendChild(label);
+
+            return axis;
+        }
+
+        function createButtonView(id) {
+            let button = document.createElement("div");
+            button.className = "gamepad-button";
+
+            let support = document.createElement("div");
+            support.className = "support";
+            button.appendChild(support);
+
+            let bar = document.createElement("div");
+            bar.className = "bar";
+            support.appendChild(bar);
+
+            let label = document.createElement("div");
+            label.innerText = id;
+            button.appendChild(label);
+
+            return button;
+        }
+
+        window.addEventListener("gamepadconnected", function(e) {
+            let gamepad_count = 0;
+            for (const gamepad of navigator.getGamepads()) {
+                if (gamepad !== null) gamepad_count ++;
+            }
+
+            if (gamepad_count > 1) {
+                document.getElementById("msg-multi-gamepad").classList.remove("hidden");
+            }
+
+            if (gamepad_idx !== -1) return;
+            gamepad_idx = e.gamepad.index;
+
+            document.getElementById("gamepad-status").innerText = `${e.gamepad.id}`;
+            document.getElementById("gamepad-stoplight").classList.remove("red");
+            document.getElementById("gamepad-stoplight").classList.add("green");
+
+            let parent = document.getElementById("axes");
+            for (let i = 0; i < e.gamepad.axes.length; i++) {
+                let view = createAxisView(i);
+                axis_views.push(view);
+                parent.appendChild(view);
+            }
+
+            parent = document.getElementById("buttons");
+            for (let i = 0; i < e.gamepad.buttons.length; i++) {
+                let view = createButtonView(i);
+                button_views.push(view);
+                parent.appendChild(view);
+            }
+
+            window.requestAnimationFrame(update);
+        });
+
+        window.addEventListener("gamepaddisconnected", function(e) {
+            if (e.gamepad.index === gamepad_idx) {
+                gamepad_idx = -1;
+
+                document.getElementById("gamepad-status").innerText = "Disconnected. Connect gamepad and press any button.";
+                document.getElementById("gamepad-stoplight").classList.remove("green");
+                document.getElementById("gamepad-stoplight").classList.add("red");
+
+                document.getElementById("axes").innerHTML = "";
+                document.getElementById("buttons").innerHTML = "";
+                axis_views = [];
+                button_views = [];
+            }
+        });
+
+        
+        // --- Rosbridge part --- //
+
+        const url_params = new URLSearchParams(window.location.search);
+        const rosbridge_url = url_params.get("rosbridge-websocket-url");
+
+        if (rosbridge_url === null) {
+            let url_example = window.location.href + 
+                (window.location.href.includes("?") ? "&" : "?") +
+                "rosbridge-websocket-url=ws://127.0.0.1:9090";
+            document.getElementById("rosbridge-addr-example").innerText = url_example;
+            document.getElementById("rosbridge-addr-example").setAttribute("href", url_example);
+            document.getElementById("msg-rosbridge-addr").classList.remove("hidden");
+        }
+        
+        let ros = new ROSLIB.Ros({ url : rosbridge_url });
+        let ros_is_connected = false;
+        
+        ros.on('connection', () => {
+            ros_is_connected = true;
+            document.getElementById("ros-status").innerText = "Connected.";
+            document.getElementById("ros-stoplight").classList.remove("red");
+            document.getElementById("ros-stoplight").classList.add("green");
+        });
+
+        ros.on('error', (error) => {
+            ros_is_connected = false;
+            document.getElementById("ros-status").innerText = `Error connecting: ${error}`;
+            document.getElementById("ros-stoplight").classList.remove("green");
+            document.getElementById("ros-stoplight").classList.add("red");
+        });
+
+        ros.on('close', function() {
+            ros_is_connected = false;
+            document.getElementById("ros-status").innerText = "Disconnected.";
+            document.getElementById("ros-stoplight").classList.remove("green");
+            document.getElementById("ros-stoplight").classList.add("red");
+        });
+
+        let joyTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: "joy",
+            messageType: "sensor_msgs/Joy",
+        });
+
+        function publishGamepadState() {
+            if (gamepad_idx === -1) return;
+            if (!ros_is_connected) return;
+
+            const gamepad = navigator.getGamepads()[gamepad_idx];
+
+            let message = new ROSLIB.Message({
+                axes: gamepad.axes,
+                buttons: gamepad.buttons.map((x) => { return x.pressed ? 1 : 0; }),
+            });
+            joyTopic.publish(message);
+        }
+
+        setInterval(publishGamepadState, 100 /* 10 Hz */);
+    </script>
+</body>
+</html>
