@@ -117,7 +117,7 @@
         <h1>ROS Web Gamepad</h1>
 
         <div id="msg-rosbridge-addr" class="alert info hidden">
-            <p>Please append the address of your <a href="http://wiki.ros.org/rosbridge_suite">rosbridge server</a> to the URL. For example:</p>
+            <p>Please append the address of your <a href="https://wiki.ros.org/rosbridge_suite">rosbridge server</a> to the URL. For example:</p>
 
             <p><tt><a id="rosbridge-addr-example"></a></tt></p>
         </div>
@@ -269,10 +269,18 @@
             document.getElementById("msg-rosbridge-addr").classList.remove("hidden");
         }
         
-        let ros = new ROSLIB.Ros({ url : rosbridge_url });
+        let ros = undefined;
         let ros_is_connected = false;
+
+        // Browsers can throw an exception if the websocket is insecure.
+        try {
+            ros = new ROSLIB.Ros({ url : rosbridge_url });
+        } catch (error) {
+            document.getElementById("ros-status").innerText = "Error loading ROSLIB.";
+            console.error(error);
+        }        
         
-        ros.on('connection', () => {
+        ros && ros.on('connection', () => {
             ros_is_connected = true;
             document.getElementById("ros-status").innerText = "Connected.";
             document.getElementById("ros-stoplight").classList.remove("red");
@@ -280,14 +288,14 @@
             document.getElementById("msg-insecure-rosbridge").classList.add("hidden");
         });
 
-        ros.on('error', (error) => {
+        ros && ros.on('error', (error) => {
             ros_is_connected = false;
             document.getElementById("ros-status").innerText = `Error connecting: ${error}`;
             document.getElementById("ros-stoplight").classList.remove("green");
             document.getElementById("ros-stoplight").classList.add("red");
         });
 
-        ros.on('close', function() {
+        ros && ros.on('close', function() {
             ros_is_connected = false;
             document.getElementById("ros-status").innerText = "Disconnected.";
             document.getElementById("ros-stoplight").classList.remove("green");
