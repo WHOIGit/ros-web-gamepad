@@ -3,12 +3,12 @@
 This is a simple web application that uses the browser [Gamepad API][] and [roslibjs][] to publish gamepad (joystick / game controller) input to ROS via a [rosbridge][], without installing anything.
 
 [Gamepad API]: https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API
-[roslibjs]: http://wiki.ros.org/roslibjs
-[rosbridge]: http://wiki.ros.org/rosbridge_suite
+[roslibjs]: https://wiki.ros.org/roslibjs
+[rosbridge]: https://wiki.ros.org/rosbridge_suite
 
 As an alternative, you might want to use the [joy][] package.
 
-[joy]: http://wiki.ros.org/joy
+[joy]: https://wiki.ros.org/joy
 
 
 # Usage
