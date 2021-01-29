@@ -113,7 +113,7 @@
 
 <body>
     <div class="container">
- 
+
         <h1>ROS Web Gamepad</h1>
 
         <div id="msg-rosbridge-addr" class="alert info hidden">
@@ -133,7 +133,7 @@
 
         <div><div id="ros-stoplight" class="stoplight red"></div><b>ROS:</b> <span id="ros-status">Disconnected.</span></div>
         <div><div id="gamepad-stoplight" class="stoplight red"></div><b>Gamepad:</b> <span id="gamepad-status">Disconnected. Connect gamepad and press any button.</span></div>
-    
+
         <div id="axes" class="gamepad-box"></div>
         <div id="buttons" class="gamepad-box"></div>
 
@@ -254,21 +254,21 @@
             }
         });
 
-        
+
         // --- Rosbridge part --- //
 
         const url_params = new URLSearchParams(window.location.search);
         const rosbridge_url = url_params.get("rosbridge-websocket-url");
 
         if (rosbridge_url === null) {
-            let url_example = window.location.href + 
+            let url_example = window.location.href +
                 (window.location.href.includes("?") ? "&" : "?") +
                 "rosbridge-websocket-url=ws://127.0.0.1:9090";
             document.getElementById("rosbridge-addr-example").innerText = url_example;
             document.getElementById("rosbridge-addr-example").setAttribute("href", url_example);
             document.getElementById("msg-rosbridge-addr").classList.remove("hidden");
         }
-        
+
         let ros = undefined;
         let ros_is_connected = false;
 
@@ -276,10 +276,10 @@
         try {
             ros = new ROSLIB.Ros({ url : rosbridge_url });
         } catch (error) {
-            document.getElementById("ros-status").innerText = "Error loading ROSLIB.";
+            document.getElementById("ros-status").innerText = "Error connecting.";
             console.error(error);
-        }        
-        
+        }
+
         ros && ros.on('connection', () => {
             ros_is_connected = true;
             document.getElementById("ros-status").innerText = "Connected.";
@@ -328,7 +328,7 @@
             if (ros_is_connected) return;
             if (rosbridge_url === null) return;
 
-            if (window.location.protocol === "https:" && !rosbridge_url.startswith("wss:")) {
+            if (window.location.protocol === "https:" && !rosbridge_url.startsWith("wss:")) {
                 document.getElementById("msg-insecure-rosbridge").classList.remove("hidden");
             }
         }, 5000);
